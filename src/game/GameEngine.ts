@@ -83,6 +83,12 @@ export class GameEngine {
   }
 
   update(deltaTime: number) {
+    // Screen shake decay should happen even when paused/gameOver to settle the view
+    if (this.state.screenShake > 0) {
+      this.state.screenShake *= 0.9;
+      if (this.state.screenShake < 0.1) this.state.screenShake = 0;
+    }
+
     if (this.state.isGameOver || this.state.isPaused) {
       audioManager.stopMusic();
       return;
@@ -97,12 +103,6 @@ export class GameEngine {
 
     // Update animation time only when not paused/over
     this.state.animationTime += deltaTime;
-
-    // Screen shake decay
-    if (this.state.screenShake > 0) {
-      this.state.screenShake *= 0.9;
-      if (this.state.screenShake < 0.1) this.state.screenShake = 0;
-    }
 
     // Combo timer
     if (this.state.comboTimer > 0) {
@@ -168,6 +168,7 @@ export class GameEngine {
               this.state.kills++;
             } else {
               this.state.isGameOver = true;
+              this.state.screenShake = 20; // Strong shake for taxi crash
             }
           }
         }

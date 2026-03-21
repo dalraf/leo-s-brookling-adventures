@@ -18,14 +18,14 @@ export class Renderer {
   }
 
   render(state: GameState) {
+    this.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
     this.ctx.save();
     if (state.screenShake > 0) {
       const dx = (Math.random() - 0.5) * state.screenShake;
       const dy = (Math.random() - 0.5) * state.screenShake;
       this.ctx.translate(dx, dy);
     }
-
-    this.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     const cameraX = state.cameraX;
 
@@ -107,23 +107,24 @@ export class Renderer {
     state.projectiles.forEach(p => this.entityRenderer.drawProjectile(p));
     state.particles.forEach(p => this.entityRenderer.drawParticle(p));
 
-    this.ctx.restore();
+    this.ctx.restore(); // Close camera translate
+    
+    // Draw Game Over within the shake context if required
+    if (state.isGameOver) {
+      this.uiRenderer.drawGameOver(state.score, state.kills, state.level);
+    }
 
-    // 5. UI
+    this.ctx.restore(); // Close screen shake
+
+    // 5. UI - Stable (Drawn after all restores)
     this.uiRenderer.drawHUD(state);
 
     if (state.isPaused) {
       this.uiRenderer.drawPaused();
     }
 
-    if (state.isGameOver) {
-      this.uiRenderer.drawGameOver(state.score, state.kills, state.level);
-    }
-
     if (state.levelUpTimer > 0) {
       this.uiRenderer.drawLevelUp(state.level);
     }
-
-    this.ctx.restore();
   }
 }

@@ -138,6 +138,7 @@ export class CombatSystem {
       
       if (player.health <= 0) {
         state.isGameOver = true;
+        state.screenShake = 25; // Massive shake for game over
         audioManager.playSFX('death');
         audioManager.stopMusic();
       }
