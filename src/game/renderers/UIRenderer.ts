@@ -18,6 +18,19 @@ export class UIRenderer extends BaseRenderer {
     this.ctx.strokeStyle = 'white';
     this.ctx.lineWidth = 2;
     this.ctx.strokeRect(x, y, barW, barH);
+
+    // Stamina Bar
+    const staminaW = 120; // Smaller bar
+    const staminaY = y + barH + 5;
+    const staminaH = 8;
+    this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    this.ctx.fillRect(x, staminaY, staminaW, staminaH);
+    const staminaPercent = Math.max(0, player.stamina / player.maxStamina);
+    this.ctx.fillStyle = player.isExhausted ? '#ef4444' : '#3b82f6';
+    this.ctx.fillRect(x, staminaY, staminaW * staminaPercent, staminaH);
+    this.ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(x, staminaY, staminaW, staminaH);
     this.ctx.fillStyle = 'white';
     this.ctx.font = 'bold 20px "Courier New"';
     this.ctx.textAlign = 'left';

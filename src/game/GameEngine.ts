@@ -36,6 +36,9 @@ export class GameEngine {
         height: 60,
         health: 100,
         maxHealth: 100,
+        stamina: 100,
+        maxStamina: 100,
+        isExhausted: false,
         state: 'idle',
         direction: 'right',
         lastAttackTime: 0,
@@ -375,25 +378,44 @@ export class GameEngine {
       this.state.isGameOver = true;
     }
 
-    // Horizontal Movement
+    // Movement & Stamina Logic
     if (player.state !== 'hit' && player.state !== 'dead') {
-      const isDashing = inputManager.isPressed('ShiftLeft') || inputManager.isPressed('ShiftRight');
-      const speed = isDashing ? PLAYER_SPEED * 2 : PLAYER_SPEED;
+      const isMoving = inputManager.isPressed('ArrowLeft') || inputManager.isPressed('ArrowRight') || 
+                       inputManager.isPressed('ArrowUp') || inputManager.isPressed('ArrowDown');
+                       
+      // Run Logic
+      const wantsToRun = (inputManager.isPressed('ShiftLeft') || inputManager.isPressed('ShiftRight')) && isMoving;
+      const canRun = !player.isExhausted;
+      const isRunning = wantsToRun && canRun;
+      
+      const speed = isRunning ? PLAYER_SPEED * 1.8 : PLAYER_SPEED;
 
+      if (isRunning) {
+        player.stamina = Math.max(0, player.stamina - dt * 0.15); // Very fast depletion
+        if (player.stamina <= 0) {
+          player.isExhausted = true;
+          audioManager.playSFX('bark'); // Out of breath
+        }
+        // Run particles
+        if (Math.random() > 0.7) ParticleSystem.createParticles(this.state, player.position.x + player.width/2, player.position.z, '#fff', 'smoke');
+      } else {
+        // Regen stamina (Slowly)
+        const regenRate = isMoving ? 0.01 : 0.03; // Much slower regen, especially while walking
+        player.stamina = Math.min(player.maxStamina, player.stamina + dt * regenRate);
+        
+        // Recover from exhaustion at 10%
+        if (player.isExhausted && player.stamina >= player.maxStamina * 0.1) {
+          player.isExhausted = false;
+        }
+      }
+
+      // Horizontal Movement
       if (inputManager.isPressed('ArrowLeft')) {
         player.velocity.x = -speed;
         player.direction = 'left';
-        if (isDashing) {
-          if (Math.random() > 0.7) ParticleSystem.createParticles(this.state, player.position.x + player.width/2, player.position.z, '#fff', 'smoke');
-          if (Math.random() > 0.95) audioManager.playSFX('dash');
-        }
       } else if (inputManager.isPressed('ArrowRight')) {
         player.velocity.x = speed;
         player.direction = 'right';
-        if (isDashing) {
-          if (Math.random() > 0.7) ParticleSystem.createParticles(this.state, player.position.x + player.width/2, player.position.z, '#fff', 'smoke');
-          if (Math.random() > 0.95) audioManager.playSFX('dash');
-        }
       } else {
         player.velocity.x = 0;
       }
@@ -755,6 +777,9 @@ export class GameEngine {
         comboCount: 0,
         hitTimer: 0,
         invulnerableTimer: 0,
+        stamina: 100,
+        maxStamina: 100,
+        isExhausted: false,
         isBoss: shouldSpawnBoss,
         inventory: inventory,
         visuals: visuals

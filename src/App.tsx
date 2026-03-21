@@ -270,13 +270,13 @@ export default function App() {
                     <Target className="text-white/80" size={20} />
                   </button>
 
-                  {/* Dash (Bottom) */}
+                  {/* Run (Bottom) */}
                   <button 
                     className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center active:bg-white/20 active:scale-90 transition-all border border-white/20 shadow-lg touch-none"
                     onTouchStart={(e) => { e.preventDefault(); engineRef.current?.inputManager.setKey('ShiftLeft', true); }}
                     onTouchEnd={(e) => { e.preventDefault(); engineRef.current?.inputManager.setKey('ShiftLeft', false); }}
                   >
-                    <span className="text-[10px] font-bold uppercase tracking-tighter text-white/80">Dash</span>
+                    <span className="text-[10px] font-bold uppercase tracking-tighter text-white/80">Correr</span>
                   </button>
 
                   {/* Restart Button (Floating above/below if game over) */}

@@ -40,6 +40,9 @@ export interface Entity {
   height: number;
   health: number;
   maxHealth: number;
+  stamina: number;
+  maxStamina: number;
+  isExhausted?: boolean;
   state: EntityState;
   direction: 'left' | 'right';
   lastAttackTime: number;
