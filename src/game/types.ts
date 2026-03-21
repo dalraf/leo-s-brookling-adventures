@@ -81,9 +81,20 @@ export interface FloatingText {
   color: string;
 }
 
+export interface Taxi {
+  id: string;
+  position: Vector3D;
+  velocity: Vector3D;
+  width: number;
+  height: number;
+  active: boolean;
+  honked: boolean;
+}
+
 export interface GameState {
   player: Entity;
   enemies: Entity[];
+  taxis: Taxi[];
   items: Item[];
   projectiles: Projectile[];
   dogs: Dog[];

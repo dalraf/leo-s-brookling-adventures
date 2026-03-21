@@ -101,4 +101,21 @@ export class SoundGenerator {
     }
     return buffer;
   }
+
+  static createHonk(ctx: AudioContext): AudioBuffer {
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.4, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    const freq1 = 440; // A4
+    const freq2 = 523.25; // C5
+    for (let i = 0; i < data.length; i++) {
+      const t = i / ctx.sampleRate;
+      let val = (Math.sin(2 * Math.PI * freq1 * t) + Math.sin(2 * Math.PI * freq2 * t)) * 0.3;
+      // Slight square-ish distortion for "car horn" feel
+      val = Math.max(-0.5, Math.min(0.5, val * 2));
+      // Envelope
+      const env = Math.exp(-t * 2) * (t < 0.01 ? t / 0.01 : 1);
+      data[i] = val * env;
+    }
+    return buffer;
+  }
 }

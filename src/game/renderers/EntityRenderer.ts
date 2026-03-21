@@ -1,5 +1,5 @@
 import { BaseRenderer } from './BaseRenderer';
-import { Entity, Particle, Dog } from '../types';
+import { Entity, Particle, Dog, Taxi } from '../types';
 
 export class EntityRenderer extends BaseRenderer {
   drawEntity(entity: Entity, color: string, animationTime: number) {
@@ -456,6 +456,131 @@ export class EntityRenderer extends BaseRenderer {
       this.ctx.strokeRect(0, -3, tailL, 6);
       this.ctx.restore();
     }
+
+    this.ctx.restore();
+  }
+
+  drawTaxi(taxi: Taxi) {
+    this.ctx.save();
+    this.ctx.translate(taxi.position.x - taxi.width / 2, taxi.position.z);
+
+    const isMovingLeft = taxi.velocity.x < 0;
+    if (isMovingLeft) {
+      this.ctx.scale(-1, 1);
+      this.ctx.translate(-taxi.width, 0);
+    }
+
+    const w = taxi.width;
+    const h = taxi.height;
+
+    // Shadow
+    this.ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    this.ctx.beginPath();
+    this.ctx.ellipse(w / 2, 0, w / 2 + 30, 15, 0, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Wheels
+    const drawWheel = (wx: number) => {
+      this.ctx.fillStyle = '#171717';
+      this.ctx.beginPath();
+      this.ctx.arc(wx, -25, 25, 0, Math.PI * 2);
+      this.ctx.fill();
+      // Rim
+      this.ctx.fillStyle = '#94a3b8';
+      this.ctx.beginPath();
+      this.ctx.arc(wx, -25, 12, 0, Math.PI * 2);
+      this.ctx.fill();
+      // Bolts
+      this.ctx.fillStyle = '#475569';
+      for (let i = 0; i < 5; i++) {
+        const ang = (i / 5) * Math.PI * 2;
+        this.ctx.fillRect(wx + Math.cos(ang) * 7 - 2, -25 + Math.sin(ang) * 7 - 2, 4, 4);
+      }
+    };
+    drawWheel(70);
+    drawWheel(w - 70);
+
+    // Body Lower Part
+    this.ctx.fillStyle = '#facc15';
+    this.ctx.strokeStyle = '#854d0e';
+    this.ctx.lineWidth = 3;
+    
+    // Front hood, main body, trunk
+    this.ctx.beginPath();
+    this.ctx.roundRect(0, -90, w, 70, 8);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    // Cabin Part
+    this.ctx.beginPath();
+    this.ctx.moveTo(60, -90);
+    this.ctx.lineTo(100, -h - 10);
+    this.ctx.lineTo(w - 110, -h - 10);
+    this.ctx.lineTo(w - 50, -90);
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    // Large Windows (Profile)
+    this.ctx.fillStyle = '#1e293b';
+    this.ctx.save();
+    // Front window
+    this.ctx.beginPath();
+    this.ctx.moveTo(105, -h);
+    this.ctx.lineTo(w / 2 - 10, -h);
+    this.ctx.lineTo(w / 2 - 10, -90);
+    this.ctx.lineTo(80, -90);
+    this.ctx.closePath();
+    this.ctx.fill();
+    
+    // Back window
+    this.ctx.beginPath();
+    this.ctx.moveTo(w / 2 + 10, -h);
+    this.ctx.lineTo(w - 120, -h);
+    this.ctx.lineTo(w - 65, -90);
+    this.ctx.lineTo(w / 2 + 10, -90);
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.restore();
+
+    // Checker Line
+    this.ctx.fillStyle = '#000';
+    const checkerSize = 12;
+    for (let x = 10; x < w - 10; x += checkerSize * 2) {
+      this.ctx.fillRect(x, -65, checkerSize, checkerSize);
+      this.ctx.fillRect(x + checkerSize, -53, checkerSize, checkerSize);
+    }
+
+    // Door handles
+    this.ctx.fillStyle = '#94a3b8';
+    this.ctx.fillRect(w / 2 - 40, -50, 20, 5);
+    this.ctx.fillRect(w / 2 + 60, -50, 20, 5);
+
+    // Taxi Sign
+    this.ctx.fillStyle = '#facc15';
+    this.ctx.fillRect(w / 2 - 40, -h - 25, 80, 25);
+    this.ctx.strokeRect(w / 2 - 40, -h - 25, 80, 25);
+    this.ctx.fillStyle = '#000';
+    this.ctx.font = 'bold 20px Arial';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('TAXI', w / 2, -h - 5);
+
+    // Chrome Details
+    this.ctx.fillStyle = '#cbd5e1';
+    this.ctx.fillRect(-15, -45, 30, 12); // Back bumper
+    this.ctx.fillRect(w - 15, -45, 30, 12); // Front bumper
+
+    // Grill
+    this.ctx.fillRect(w - 3, -80, 5, 25);
+
+    // Headlight (Brighter)
+    this.ctx.shadowBlur = 15;
+    this.ctx.shadowColor = '#fef08a';
+    this.ctx.fillStyle = '#fffabc';
+    this.ctx.beginPath();
+    this.ctx.arc(w - 5, -65, 12, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.shadowBlur = 0;
 
     this.ctx.restore();
   }

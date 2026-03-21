@@ -58,6 +58,7 @@ export class GameEngine {
         },
       },
       enemies: [],
+      taxis: [],
       items: [],
       projectiles: [],
       dogs: [],
@@ -115,6 +116,7 @@ export class GameEngine {
 
     this.updatePlayer(dtFactor);
     this.updateEnemies(dtFactor);
+    this.updateTaxis(dtFactor);
     this.updateItems(dtFactor);
     this.updateProjectiles(dtFactor);
     this.updateDogs(dtFactor);
@@ -123,7 +125,80 @@ export class GameEngine {
     
     this.updateTimers(deltaTime);
     this.spawnEnemies();
+    this.spawnTaxis();
     this.updateCamera();
+  }
+
+  private updateTaxis(dt: number) {
+    const { player, enemies, taxis } = this.state;
+    for (let i = taxis.length - 1; i >= 0; i--) {
+      const taxi = taxis[i];
+      taxi.position.x += taxi.velocity.x * dt;
+
+      // Honk when entering screen
+      if (!taxi.honked && taxi.position.x > this.state.cameraX && taxi.position.x < this.state.cameraX + CANVAS_WIDTH) {
+        audioManager.playSFX('honk', 0.6);
+        taxi.honked = true;
+      }
+
+      // Collision Detection
+      const entities = [player, ...enemies];
+      entities.forEach(entity => {
+        if (entity.state === 'dead' || entity.invulnerableTimer > 0) return;
+        
+        const dx = Math.abs(entity.position.x - taxi.position.x);
+        const dz = Math.abs(entity.position.z - taxi.position.z);
+
+        // Taxi is large, so we check a range
+        if (dx < taxi.width / 2 && dz < 35) {
+          entity.health -= 40;
+          entity.state = 'hit';
+          entity.hitTimer = 500;
+          entity.invulnerableTimer = 1000;
+          entity.velocity.x = taxi.velocity.x * 0.5;
+          
+          this.createFloatingText(entity.position.x, entity.position.z - 40, 'VROOOOM!', '#facc15');
+          ParticleSystem.createParticles(this.state, entity.position.x, entity.position.z, '#ef4444', 'blood');
+          
+          if (entity.health <= 0) {
+            entity.state = 'dead';
+            entity.velocity.y = -8;
+            if (entity !== player) {
+              this.state.score += 100;
+              this.state.kills++;
+            } else {
+              this.state.isGameOver = true;
+            }
+          }
+        }
+      });
+
+      // Cleanup
+      if (taxi.position.x < this.state.cameraX - 1000 || taxi.position.x > this.state.cameraX + CANVAS_WIDTH + 1000) {
+        taxis.splice(i, 1);
+      }
+    }
+  }
+
+  private spawnTaxis() {
+    if (Math.random() < 0.002 && this.state.taxis.length < 1) {
+      const direction = Math.random() > 0.5 ? 'right' : 'left';
+      const x = direction === 'right' ? this.state.cameraX - 500 : this.state.cameraX + CANVAS_WIDTH + 500;
+      // Sidewalk is first 30px of the street area, so we spawn below that
+      const streetStart = STREET_TOP + 60; 
+      const z = streetStart + Math.random() * (STREET_BOTTOM - streetStart - 20);
+      const speed = PLAYER_SPEED * 2.5;
+
+      this.state.taxis.push({
+        id: `taxi-${Date.now()}`,
+        position: { x, y: 0, z },
+        velocity: { x: direction === 'right' ? speed : -speed, y: 0, z: 0 },
+        width: 320, // Much larger taxi
+        height: 120,
+        active: true,
+        honked: false
+      });
+    }
   }
 
   private updateDogs(dt: number) {

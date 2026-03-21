@@ -89,6 +89,14 @@ export class Renderer {
       });
     });
 
+    // Add Taxis
+    state.taxis.forEach(taxi => {
+      dynamicObjects.push({
+        z: taxi.position.z,
+        draw: () => this.entityRenderer.drawTaxi(taxi)
+      });
+    });
+
     // Sort all dynamic objects by their Z/yBase coordinate
     dynamicObjects.sort((a, b) => a.z - b.z);
 
