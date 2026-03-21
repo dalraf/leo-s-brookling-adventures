@@ -190,10 +190,12 @@ export default function App() {
           >
             {/* HUD Overlay */}
             <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none z-10">
-              <div className="flex gap-2 pointer-events-auto">
-                <div className="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
-                  <span className="text-xs font-black uppercase tracking-[0.2em] text-red-500">Leo's Brookling Adventures</span>
-                </div>
+              <div className="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10 invisible">
+                {/* Spacer to maintain layout? or just use different structure */}
+              </div>
+              
+              {/* Centered Controls */}
+              <div className="absolute left-1/2 -translate-x-1/2 flex gap-2 pointer-events-auto">
                 <button 
                   onClick={handleTogglePause}
                   className="bg-black/40 backdrop-blur-sm p-2 rounded-xl border border-white/10 active:bg-white/20 transition-colors"
@@ -207,7 +209,7 @@ export default function App() {
                   {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                 </button>
               </div>
-              
+
               <div className="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
                 <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">NY, 1989</span>
               </div>
