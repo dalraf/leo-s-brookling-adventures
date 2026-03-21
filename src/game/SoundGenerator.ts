@@ -91,4 +91,14 @@ export class SoundGenerator {
     }
     return buffer;
   }
+
+  static createBite(ctx: AudioContext): AudioBuffer {
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const t = i / ctx.sampleRate;
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 60) + Math.sin(2 * Math.PI * 300 * Math.exp(-t * 10)) * Math.exp(-t * 20);
+    }
+    return buffer;
+  }
 }

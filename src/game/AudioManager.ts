@@ -44,6 +44,7 @@ export class AudioManager {
     this.buffers.set('dash', SoundGenerator.createDash(this.ctx));
     this.buffers.set('death', SoundGenerator.createDeath(this.ctx));
     this.buffers.set('bark', SoundGenerator.createBark(this.ctx));
+    this.buffers.set('bite', SoundGenerator.createBite(this.ctx));
   }
 
   public async resume() {

@@ -134,7 +134,10 @@ export class GameEngine {
     if (Math.random() < 0.005 && dogs.length < 3) {
       const x = this.state.cameraX + CANVAS_WIDTH + 100;
       const z = STREET_TOP + 10; // On the sidewalk
-      const dogColors = ['#ef4444', '#ffffff', '#171717', '#78350f'];
+      const dogColors = ['#7c2d12', '#ffffff', '#171717', '#78350f', '#f97316'];
+      const variants: ('pitbull' | 'shepherd' | 'mutt')[] = ['pitbull', 'shepherd', 'mutt'];
+      const collarColors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b'];
+
       dogs.push({
         id: `dog-${Date.now()}`,
         position: { x, y: 0, z },
@@ -144,7 +147,9 @@ export class GameEngine {
         direction: Math.random() > 0.5 ? 'right' : 'left',
         wakeTimer: 0,
         width: 40,
-        height: 25
+        height: 25,
+        variant: variants[Math.floor(Math.random() * variants.length)],
+        collarColor: collarColors[Math.floor(Math.random() * collarColors.length)]
       });
     }
 
@@ -152,7 +157,6 @@ export class GameEngine {
       const dog = dogs[i];
 
       if (dog.state === 'sleeping') {
-        // Check if player or any enemy is close
         const entities = [player, ...enemies];
         const nearEntity = entities.find(e => {
           const dx = Math.abs(e.position.x - dog.position.x);
@@ -162,20 +166,80 @@ export class GameEngine {
 
         if (nearEntity) {
           dog.state = 'waking';
-          dog.wakeTimer = 500; // 0.5 seconds to wake up
+          dog.wakeTimer = 600;
           audioManager.playSFX('bark', 0.4);
-          // Run away from the entity
           dog.direction = nearEntity.position.x > dog.position.x ? 'left' : 'right';
         }
       } else if (dog.state === 'waking') {
         dog.wakeTimer -= dt * 16.67;
         if (dog.wakeTimer <= 0) {
+          if (enemies.length === 0) {
+            dog.state = 'running';
+            dog.velocity.x = dog.direction === 'right' ? 6 : -6;
+          } else {
+            // Find nearest enemy to attack
+            const nearestEnemy = enemies.reduce((prev, curr) => {
+              const distPrev = Math.abs(prev.position.x - dog.position.x);
+              const distCurr = Math.abs(curr.position.x - dog.position.x);
+              return distPrev < distCurr ? prev : curr;
+            }, enemies[0]);
+
+            if (nearestEnemy && nearestEnemy.health > 0) {
+              dog.state = 'chasing';
+              dog.targetId = nearestEnemy.id;
+            } else {
+              dog.state = 'running';
+              dog.velocity.x = dog.direction === 'right' ? 6 : -6;
+            }
+          }
+        }
+      } else if (dog.state === 'chasing') {
+        const target = enemies.find(e => e.id === dog.targetId);
+        if (!target || target.health <= 0) {
           dog.state = 'running';
           dog.velocity.x = dog.direction === 'right' ? 6 : -6;
+          continue;
+        }
+
+        const dx = target.position.x - dog.position.x;
+        const dz = target.position.z - dog.position.z;
+        const dist = Math.abs(dx);
+        const zDist = Math.abs(dz);
+
+        dog.direction = dx > 0 ? 'right' : 'left';
+        
+        const chaseSpeed = 7;
+        dog.velocity.x = dx > 0 ? chaseSpeed : -chaseSpeed;
+        dog.velocity.z = dz > 0 ? 2 : -2;
+
+        if (dist < 30 && zDist < 20) {
+          // BITE!
+          target.health -= 25;
+          target.state = 'hit';
+          target.hitTimer = 300;
+          target.velocity.x = dog.direction === 'right' ? 2 : -2;
+          
+          this.createFloatingText(target.position.x, target.position.z - 40, 'MORDIDA!', '#ef4444');
+          ParticleSystem.createParticles(this.state, target.position.x, target.position.z, '#ef4444', 'blood');
+          audioManager.playSFX('bite', 0.6);
+          
+          if (target.health <= 0) {
+            target.state = 'dead';
+            target.velocity.y = -5;
+            this.state.score += 50;
+            this.state.kills++;
+          }
+
+          dog.state = 'running';
+          dog.direction = dog.direction === 'right' ? 'left' : 'right';
+          dog.velocity.x = dog.direction === 'right' ? 8 : -8;
+          dog.velocity.z = 0;
+        } else {
+          dog.position.x += dog.velocity.x * dt;
+          dog.position.z += dog.velocity.z * dt;
         }
       } else if (dog.state === 'running') {
         dog.position.x += dog.velocity.x * dt;
-        // Check if offscreen
         if (dog.position.x < this.state.cameraX - 200 || dog.position.x > this.state.cameraX + CANVAS_WIDTH + 200) {
           dogs.splice(i, 1);
         }
@@ -547,7 +611,7 @@ export class GameEngine {
     const skinColors = ['#8d5524', '#c68642', '#e0ac69', '#f1c27d', '#ffdbac'];
     const clothingColors = ['#1e293b', '#450a0a', '#064e3b', '#4c1d95', '#78350f', '#111827', '#3f3f46', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
     const hairColors = ['#000000', '#451a03', '#78350f', '#a16207', '#d97706'];
-    const hatTypes: ('none' | 'beanie' | 'cap' | 'bandana' | 'hoodie')[] = ['none', 'beanie', 'cap', 'bandana', 'hoodie'];
+    const hatTypes: ('none' | 'beanie' | 'cap' | 'bandana' | 'hoodie' | 'beret' | 'headphones' | 'mohawk')[] = ['none', 'beanie', 'cap', 'bandana', 'hoodie', 'beret', 'headphones', 'mohawk'];
     
     const clothingColor = clothingColors[Math.floor(Math.random() * clothingColors.length)];
     // 50% chance for sleeves to be different color (multi-toned)

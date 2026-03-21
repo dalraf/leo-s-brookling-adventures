@@ -156,33 +156,95 @@ export class EntityRenderer extends BaseRenderer {
     const headWidth = 25;
     this.ctx.fillRect((entity.width - headWidth) / 2, -entity.height - 15, headWidth, 20);
     
-    // Hair or Hat
+    // Head Accessories (Profile View)
+    const headX = (entity.width - headWidth) / 2;
+    const headY = -entity.height - 15;
+
     if (visuals.hatType !== 'none') {
       this.ctx.fillStyle = hatColor;
+      
       if (visuals.hatType === 'beanie') {
-        this.ctx.fillRect((entity.width - headWidth) / 2 - 2, -entity.height - 20, headWidth + 4, 10);
+        // Main part
+        this.ctx.fillRect(headX - 2, headY - 5, headWidth + 4, 12);
+        // Fold/Bottom part
+        this.ctx.fillStyle = this.darkenColor(hatColor);
+        this.ctx.fillRect(headX - 3, headY + 5, headWidth + 6, 5);
+        // Pom-pom or top curve
+        this.ctx.fillStyle = hatColor;
+        this.ctx.beginPath();
+        this.ctx.arc(headX + headWidth / 2, headY - 5, 8, 0, Math.PI, true);
+        this.ctx.fill();
       } else if (visuals.hatType === 'cap') {
-        this.ctx.fillRect((entity.width - headWidth) / 2 - 2, -entity.height - 20, headWidth + 4, 8);
-        this.ctx.fillRect((entity.width - headWidth) / 2 + 5, -entity.height - 15, 15, 4); // Brim
+        // Dome
+        this.ctx.fillRect(headX - 1, headY - 5, headWidth + 2, 12);
+        // Brim (Sticks out to the front/right)
+        this.ctx.fillStyle = this.darkenColor(hatColor);
+        this.ctx.fillRect(headX + headWidth - 5, headY + 3, 14, 4);
+        // Top button
+        this.ctx.fillRect(headX + headWidth / 2 - 2, headY - 7, 4, 2);
       } else if (visuals.hatType === 'bandana') {
         this.ctx.fillStyle = '#ef4444'; // Red bandana
-        this.ctx.fillRect((entity.width - headWidth) / 2 - 1, -entity.height - 15, headWidth + 2, 6);
+        // Band around head
+        this.ctx.fillRect(headX - 1, headY + 2, headWidth + 2, 6);
+        // Knot at the back (left)
+        this.ctx.fillRect(headX - 6, headY + 4, 6, 4);
+        this.ctx.beginPath();
+        this.ctx.moveTo(headX - 4, headY + 8);
+        this.ctx.lineTo(headX - 10, headY + 14);
+        this.ctx.lineTo(headX - 6, headY + 14);
+        this.ctx.fill();
       } else if (visuals.hatType === 'hoodie') {
-        this.ctx.fillRect((entity.width - headWidth) / 2 - 4, -entity.height - 22, headWidth + 8, 25);
-        // Face cutout
+        this.ctx.fillStyle = hatColor;
+        // Outer hood
+        this.ctx.fillRect(headX - 4, headY - 7, headWidth + 8, 25);
+        // Shadowed interior
+        this.ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        this.ctx.fillRect(headX + 2, headY, headWidth - 4, 15);
+        // Draw face again inside (simple skin rect)
         this.ctx.fillStyle = skinColor;
-        this.ctx.fillRect((entity.width - headWidth) / 2 + 2, -entity.height - 15, headWidth - 4, 15);
+        this.ctx.fillRect(headX + 4, headY + 2, headWidth - 8, 12);
+      } else if (visuals.hatType === 'beret') {
+        this.ctx.save();
+        this.ctx.translate(headX + headWidth / 2, headY);
+        this.ctx.rotate(-Math.PI / 12); // Slanted
+        this.ctx.fillStyle = hatColor;
+        this.ctx.beginPath();
+        this.ctx.ellipse(0, 0, 18, 6, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+      } else if (visuals.hatType === 'headphones') {
+        // Headband
+        this.ctx.strokeStyle = '#171717';
+        this.ctx.lineWidth = 4;
+        this.ctx.beginPath();
+        this.ctx.arc(headX + headWidth / 2, headY + 5, 14, Math.PI, 0);
+        this.ctx.stroke();
+        // Earcup (Center of head in profile)
+        this.ctx.fillStyle = hatColor;
+        this.ctx.beginPath();
+        this.ctx.ellipse(headX + headWidth / 2, headY + 10, 8, 11, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.stroke();
+      } else if (visuals.hatType === 'mohawk') {
+        this.ctx.fillStyle = hatColor; // Mohawk color
+        // Spiky ridge along the top
+        for (let i = 0; i < 5; i++) {
+          this.ctx.beginPath();
+          this.ctx.moveTo(headX + i * 6 - 2, headY-2);
+          this.ctx.lineTo(headX + i * 6 + 1, headY - 12);
+          this.ctx.lineTo(headX + i * 6 + 4, headY-2);
+          this.ctx.fill();
+        }
       }
     } else {
       // Hair
       this.ctx.fillStyle = hairColor;
-      this.ctx.fillRect((entity.width - headWidth) / 2, -entity.height - 20, headWidth, 8);
+      this.ctx.fillRect(headX, headY - 5, headWidth, 10);
+      // Back of hair
+      this.ctx.fillRect(headX - 2, headY - 2, 6, 15);
     }
 
     // Face details (Eyes and Mouth) - Profile View
-    const headX = (entity.width - headWidth) / 2;
-    const headY = -entity.height - 15;
-    
     // Eye (Profile view - only one eye visible on the front side)
     const eyeY = headY + 6;
     const eyeW = 6;
@@ -237,90 +299,161 @@ export class EntityRenderer extends BaseRenderer {
     const time = animationTime / 100;
     const isSleeping = dog.state === 'sleeping';
     const isWaking = dog.state === 'waking';
-    const isRunning = dog.state === 'running';
+    const isRunning = dog.state === 'running' || dog.state === 'chasing';
+    const variant = dog.variant || 'mutt';
 
     this.ctx.fillStyle = dog.color;
 
     if (isSleeping) {
-      // Sleeping position: curled up
+      // Sleeping position
       this.ctx.save();
+      const breathing = Math.sin(time * 0.5) * 2;
       this.ctx.translate(dog.width / 2, 0);
       
-      // Body
+      // Shadow
+      this.ctx.fillStyle = 'rgba(0,0,0,0.15)';
       this.ctx.beginPath();
-      this.ctx.ellipse(0, -8, 18, 10, 0, 0, Math.PI * 2);
+      this.ctx.ellipse(0, 0, 20 + breathing, 6, 0, 0, Math.PI * 2);
       this.ctx.fill();
+
+      this.ctx.fillStyle = dog.color;
       
-      // Head (tucked in)
+      // Body (pulsing slightly with breathing)
       this.ctx.beginPath();
-      this.ctx.arc(10, -12, 8, 0, Math.PI * 2);
+      this.ctx.ellipse(0, -8, 20 + breathing * 0.5, 12, 0, 0, Math.PI * 2);
       this.ctx.fill();
+      this.ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+      this.ctx.stroke();
       
-      // Snoring effect (zZz)
-      if (Math.floor(time * 0.5) % 2 === 0) {
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = '10px monospace';
-        this.ctx.fillText('z', 15, -25);
+      // Head
+      this.ctx.beginPath();
+      this.ctx.arc(12, -10, 9, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.stroke();
+      
+      // Ears tucked
+      this.ctx.fillStyle = this.darkenColor(dog.color);
+      this.ctx.fillRect(10, -18, 5, 4);
+      
+      // Zzz floating
+      if (Math.floor(time * 0.4) % 3 === 0) {
+        this.ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        this.ctx.font = 'bold 12px Arial';
+        this.ctx.fillText('z', 20, -25 - (time % 5) * 2);
       }
       
       this.ctx.restore();
     } else {
-      // Standing/Running
-      
       // Shadow
       this.ctx.fillStyle = 'rgba(0,0,0,0.2)';
       this.ctx.beginPath();
-      this.ctx.ellipse(dog.width/2, 0, 20, 5, 0, 0, Math.PI * 2);
+      const shadowExpand = isRunning ? Math.sin(time * 2) * 2 : 0;
+      this.ctx.ellipse(dog.width / 2, 0, 22 + shadowExpand, 6, 0, 0, Math.PI * 2);
       this.ctx.fill();
 
-      this.ctx.fillStyle = dog.color;
+      const runBounce = isRunning ? Math.abs(Math.sin(time * 2)) * -5 : 0;
+      this.ctx.translate(0, runBounce);
 
-      // Legs (Front and Back)
-      const legSwing = isRunning ? Math.sin(time * 1.5) * 0.5 : 0;
+      // Legs
+      const legSwing = isRunning ? Math.sin(time * 2) * 0.6 : (isWaking ? Math.sin(time * 5) * 0.1 : 0);
       
-      // Back Leg
+      // Far Legs
+      this.ctx.fillStyle = this.darkenColor(dog.color);
       this.ctx.save();
-      this.ctx.translate(8, -12);
-      if (isRunning) this.ctx.rotate(legSwing);
+      this.ctx.translate(12, -10);
+      this.ctx.rotate(-legSwing);
       this.ctx.fillRect(-3, 0, 6, 12);
       this.ctx.restore();
 
-      // Front Leg
       this.ctx.save();
-      this.ctx.translate(dog.width - 12, -12);
-      if (isRunning) this.ctx.rotate(-legSwing);
+      this.ctx.translate(dog.width - 12, -10);
+      this.ctx.rotate(legSwing);
       this.ctx.fillRect(-3, 0, 6, 12);
       this.ctx.restore();
-      
+
       // Body
-      this.ctx.fillRect(0, -22, dog.width, 15);
+      this.ctx.fillStyle = dog.color;
+      let bodyH = 18;
+      if (variant === 'pitbull') bodyH = 22;
+      if (variant === 'shepherd') bodyH = 15;
+      
+      this.ctx.fillRect(0, -bodyH - 8, dog.width, bodyH);
+      this.ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+      this.ctx.strokeRect(0, -bodyH - 8, dog.width, bodyH);
+
+      // Collar
+      if (dog.collarColor) {
+        this.ctx.fillStyle = dog.collarColor;
+        this.ctx.fillRect(dog.width - 8, -bodyH - 8, 5, bodyH);
+      }
+
+      // Near Legs
+      this.ctx.fillStyle = dog.color;
+      this.ctx.save();
+      this.ctx.translate(8, -10);
+      this.ctx.rotate(legSwing);
+      this.ctx.fillRect(-3, 0, 6, 12);
+      this.ctx.strokeRect(-3, 0, 6, 12);
+      this.ctx.restore();
+
+      this.ctx.save();
+      this.ctx.translate(dog.width - 8, -10);
+      this.ctx.rotate(-legSwing);
+      this.ctx.fillRect(-3, 0, 6, 12);
+      this.ctx.strokeRect(-3, 0, 6, 12);
+      this.ctx.restore();
       
       // Head
       this.ctx.save();
-      this.ctx.translate(dog.width - 5, -25);
-      if (isWaking) {
-         this.ctx.rotate(Math.sin(time * 5) * 0.1);
-      }
+      this.ctx.translate(dog.width - 2, -bodyH - 10);
+      if (isWaking) this.ctx.rotate(Math.sin(time * 10) * 0.15);
+      if (isRunning) this.ctx.rotate(Math.sin(time * 2) * 0.1);
+
       this.ctx.fillStyle = dog.color;
-      this.ctx.fillRect(0, -10, 15, 15);
+      this.ctx.fillRect(0, -12, 18, 18);
+      this.ctx.strokeRect(0, -12, 18, 18);
+
+      // Muzzle
+      this.ctx.fillStyle = this.darkenColor(dog.color);
+      this.ctx.fillRect(10, -4, 12, 10);
+      this.ctx.fillStyle = 'black';
+      this.ctx.fillRect(18, -4, 5, 4); // Nose
+
+      // Eyes
+      const eyeBlink = Math.sin(time * 0.1) > 0.95 ? 0 : 4;
+      this.ctx.fillStyle = 'white';
+      this.ctx.fillRect(8, -8, 4, eyeBlink);
+      this.ctx.fillStyle = 'black';
+      this.ctx.fillRect(10, -7, 2, eyeBlink * 0.6);
+
       // Ears
       this.ctx.fillStyle = this.darkenColor(dog.color);
-      this.ctx.fillRect(2, -14, 6, 8);
-      // Nose
-      this.ctx.fillStyle = 'black';
-      this.ctx.fillRect(12, -4, 4, 4);
-      // Eye
-      this.ctx.fillStyle = 'white';
-      this.ctx.fillRect(8, -8, 3, 3);
+      if (variant === 'pitbull') {
+        this.ctx.fillRect(2, -16, 6, 6);
+      } else if (variant === 'shepherd') {
+        this.ctx.save();
+        this.ctx.translate(5, -12);
+        this.ctx.rotate(-Math.PI / 6);
+        this.ctx.fillRect(-4, -12, 8, 15);
+        this.ctx.restore();
+      } else {
+        this.ctx.fillRect(0, -14, 10, 8);
+      }
       this.ctx.restore();
       
       // Tail
       this.ctx.save();
-      this.ctx.translate(0, -18);
-      const tailWag = isRunning ? Math.sin(time * 10) * 30 : Math.sin(time * 2) * 10;
-      this.ctx.rotate((tailWag * Math.PI) / 180);
+      this.ctx.translate(2, -bodyH - 2);
+      const wagSpeed = isRunning ? 15 : (isWaking ? 8 : 2);
+      const wagRange = isRunning ? 40 : 20;
+      const tailWag = Math.sin(time * wagSpeed) * wagRange;
+      this.ctx.rotate(((-150 + tailWag) * Math.PI) / 180);
+      
       this.ctx.fillStyle = dog.color;
-      this.ctx.fillRect(-12, -3, 12, 6);
+      let tailL = 15;
+      if (variant === 'shepherd') tailL = 22;
+      this.ctx.fillRect(0, -3, tailL, 6);
+      this.ctx.strokeRect(0, -3, tailL, 6);
       this.ctx.restore();
     }
 

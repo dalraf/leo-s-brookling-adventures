@@ -10,12 +10,15 @@ export interface Dog {
   id: string;
   position: Vector3D;
   velocity: Vector3D;
-  state: 'sleeping' | 'waking' | 'running' | 'gone';
+  state: 'sleeping' | 'waking' | 'running' | 'chasing' | 'gone';
   color: string;
   direction: 'left' | 'right';
   wakeTimer: number;
   width: number;
   height: number;
+  variant?: 'pitbull' | 'shepherd' | 'mutt';
+  collarColor?: string;
+  targetId?: string;
 }
 
 export interface EntityVisuals {
@@ -24,7 +27,7 @@ export interface EntityVisuals {
   sleeveColor: string; // Added for multi-toned clothes
   pantsColor: string;
   hairColor: string;
-  hatType: 'none' | 'beanie' | 'cap' | 'bandana' | 'hoodie'; // Added hoodie
+  hatType: 'none' | 'beanie' | 'cap' | 'bandana' | 'hoodie' | 'beret' | 'headphones' | 'mohawk'; // Added mohawk, beret, headphones
   vestColor?: string;
   hatColor?: string; // Added hat color
 }
