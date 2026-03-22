@@ -56,15 +56,15 @@ export class StreetRenderer extends BaseRenderer {
     const spacing = 1600; // Place a crosswalk every 1600 pixels
     const crosswalkWidth = 200;
     const startX = Math.floor(cameraX / spacing) * spacing;
-    
+
     // Draw crosswalks currently visible on screen
     for (let x = startX; x < cameraX + CANVAS_WIDTH + spacing; x += spacing) {
       this.ctx.fillStyle = '#FFFFFF';
-      
+
       const relativeX = x + 350; // Use a more consistent offset
       const crosswalkWidth = 250; // Make them wider so they are clearly "bands"
       const streetHeight = STREET_BOTTOM - (STREET_TOP + 35);
-      
+
       const stripeHeight = 15; // Thicker stripes
       const stripeGap = 35;
       for (let cy = 0; cy < streetHeight; cy += stripeGap) {
