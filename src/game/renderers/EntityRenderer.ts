@@ -2,9 +2,15 @@ import { BaseRenderer } from './BaseRenderer';
 import { Entity, Particle, Dog, Taxi } from '../types';
 
 export class EntityRenderer extends BaseRenderer {
-  drawEntity(entity: Entity, color: string, animationTime: number) {
+  drawEntity(entity: Entity, color: string, animationTime: number, isShadow: boolean = false) {
     this.ctx.save();
-    this.ctx.translate(entity.position.x, entity.position.z + entity.position.y);
+    if (isShadow) {
+      this.ctx.translate(entity.position.x, entity.position.z);
+      this.ctx.scale(1, 0.4);
+      this.ctx.transform(1, 0, 1.2, 1, 0, 0);
+    } else {
+      this.ctx.translate(entity.position.x, entity.position.z + entity.position.y);
+    }
 
     const time = animationTime / 100;
     const isWalking = entity.state === 'walking';
@@ -287,9 +293,15 @@ export class EntityRenderer extends BaseRenderer {
     this.ctx.restore();
   }
 
-  drawDog(dog: Dog, animationTime: number) {
+  drawDog(dog: Dog, animationTime: number, isShadow: boolean = false) {
     this.ctx.save();
-    this.ctx.translate(dog.position.x, dog.position.z + dog.position.y);
+    if (isShadow) {
+      this.ctx.translate(dog.position.x, dog.position.z);
+      this.ctx.scale(1, 0.4);
+      this.ctx.transform(1, 0, 1.2, 1, 0, 0);
+    } else {
+      this.ctx.translate(dog.position.x, dog.position.z + dog.position.y);
+    }
 
     if (dog.direction === 'left') {
       this.ctx.scale(-1, 1);
@@ -447,9 +459,15 @@ export class EntityRenderer extends BaseRenderer {
     this.ctx.restore();
   }
 
-  drawTaxi(taxi: Taxi) {
+  drawTaxi(taxi: Taxi, isShadow: boolean = false) {
     this.ctx.save();
-    this.ctx.translate(taxi.position.x - taxi.width / 2, taxi.position.z);
+    if (isShadow) {
+      this.ctx.translate(taxi.position.x - taxi.width / 2, taxi.position.z);
+      this.ctx.scale(1, 0.4);
+      this.ctx.transform(1, 0, 1.2, 1, 0, 0);
+    } else {
+      this.ctx.translate(taxi.position.x - taxi.width / 2, taxi.position.z);
+    }
 
     const isMovingLeft = taxi.velocity.x < 0;
     if (isMovingLeft) {
@@ -582,12 +600,17 @@ export class EntityRenderer extends BaseRenderer {
     this.ctx.restore();
   }
 
-  drawItem(item: any) {
+  drawItem(item: any, isShadow: boolean = false) {
     this.ctx.save();
-    this.ctx.translate(item.position.x, item.position.z);
-    
-    const bounce = Math.sin(Date.now() / 200) * 5;
-    this.ctx.translate(0, -15 + bounce);
+    if (isShadow) {
+      this.ctx.translate(item.position.x, item.position.z);
+      this.ctx.scale(1, 0.4);
+      this.ctx.transform(1, 0, 1.2, 1, 0, 0);
+    } else {
+      this.ctx.translate(item.position.x, item.position.z);
+      const bounce = Math.sin(Date.now() / 200) * 5;
+      this.ctx.translate(0, -15 + bounce);
+    }
 
     if (item.type === 'iron_bar') {
       this.ctx.fillStyle = '#94a3b8';

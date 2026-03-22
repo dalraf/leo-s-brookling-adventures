@@ -15,14 +15,7 @@ export class BaseRenderer {
     return `rgb(${Math.floor(r * 0.7)}, ${Math.floor(g * 0.7)}, ${Math.floor(b * 0.7)})`;
   }
 
-  drawShadow(x: number, z: number, width: number) {
-    this.ctx.save();
-    this.ctx.translate(x + width / 2, z);
-    this.ctx.scale(1, 0.5);
-    this.ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    this.ctx.beginPath();
-    this.ctx.arc(0, 0, width / 2, 0, Math.PI * 2);
-    this.ctx.fill();
-    this.ctx.restore();
+  setContext(ctx: CanvasRenderingContext2D) {
+    this.ctx = ctx;
   }
 }

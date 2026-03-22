@@ -9,12 +9,18 @@ export class Renderer {
   private worldRenderer: WorldRenderer;
   private entityRenderer: EntityRenderer;
   private uiRenderer: UIRenderer;
+  private shadowCanvas: HTMLCanvasElement;
+  private shadowCtx: CanvasRenderingContext2D;
 
   constructor(ctx: CanvasRenderingContext2D) {
     this.ctx = ctx;
     this.worldRenderer = new WorldRenderer(ctx);
     this.entityRenderer = new EntityRenderer(ctx);
     this.uiRenderer = new UIRenderer(ctx);
+    this.shadowCanvas = document.createElement('canvas');
+    this.shadowCanvas.width = CANVAS_WIDTH;
+    this.shadowCanvas.height = CANVAS_HEIGHT;
+    this.shadowCtx = this.shadowCanvas.getContext('2d')!;
   }
 
   render(state: GameState) {
@@ -43,31 +49,47 @@ export class Renderer {
     this.worldRenderer.drawGraffiti(cameraX);
     this.worldRenderer.drawStreet(cameraX);
     
-    // 2. Shadows (Drawn before all dynamic objects to stay underneath)
+    // 2. Shadows (Using an offscreen canvas to prevent overlaps and use accurate shapes)
+    this.shadowCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    this.shadowCtx.save();
+    this.shadowCtx.translate(-cameraX, 0);
+    this.shadowCtx.filter = 'brightness(0)';
+    
+    this.entityRenderer.setContext(this.shadowCtx);
+
     // Enemies
     state.enemies.forEach(enemy => {
       if (enemy.state !== 'dead') {
-        this.entityRenderer.drawShadow(enemy.position.x, enemy.position.z, enemy.width);
+        this.entityRenderer.drawEntity(enemy, COLORS.ENEMY, state.animationTime, true);
       }
     });
 
     // Player
-    this.entityRenderer.drawShadow(state.player.position.x, state.player.position.z, state.player.width);
+    this.entityRenderer.drawEntity(state.player, COLORS.PLAYER, state.animationTime, true);
 
     // Dogs
     state.dogs.forEach(dog => {
-      this.entityRenderer.drawShadow(dog.position.x, dog.position.z, dog.width);
+      this.entityRenderer.drawDog(dog, state.animationTime, true);
     });
 
     // Taxis
     state.taxis.forEach(taxi => {
-      this.entityRenderer.drawShadow(taxi.position.x - taxi.width / 2 - 20, taxi.position.z, taxi.width + 40);
+      this.entityRenderer.drawTaxi(taxi, true);
     });
 
     // Items
     state.items.forEach(item => {
-      this.entityRenderer.drawShadow(item.position.x - 10, item.position.z, 50);
+      this.entityRenderer.drawItem(item, true);
     });
+
+    this.shadowCtx.restore();
+    this.entityRenderer.setContext(this.ctx);
+
+    // Draw shadow canvas into main canvas
+    this.ctx.save();
+    this.ctx.globalAlpha = 0.35; // Fine-tuned opacity for concrete/asphalt
+    this.ctx.drawImage(this.shadowCanvas, cameraX, 0);
+    this.ctx.restore();
 
     // 3. Dynamic Objects (Sorted by Z/yBase for depth)
     // This includes props, items, player, and enemies
