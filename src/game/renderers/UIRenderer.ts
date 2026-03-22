@@ -5,73 +5,101 @@ import { CANVAS_WIDTH, CANVAS_HEIGHT, COLORS, COMBO_TIMEOUT } from '../constants
 export class UIRenderer extends BaseRenderer {
   drawHUD(state: GameState) {
     const { player } = state;
-    const barW = 200;
-    const barH = 20;
     const x = 20;
     const y = 20;
+    const barW = 240;
+    const mainBarH = 22;
+    const subBarH = 8;
+    
+    // Background glass effect for the whole HUD block
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    this.ctx.roundRect(x - 5, y - 5, barW + 10, 130, 8);
+    this.ctx.fill();
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    this.ctx.stroke();
 
+    // 1. HEALTH (HP)
     this.ctx.fillStyle = COLORS.HEALTH_BAR_BG;
-    this.ctx.fillRect(x, y, barW, barH);
+    this.ctx.fillRect(x, y, barW, mainBarH);
     const healthPercent = Math.max(0, player.health / player.maxHealth);
     this.ctx.fillStyle = COLORS.HEALTH_BAR;
-    this.ctx.fillRect(x, y, barW * healthPercent, barH);
-    this.ctx.strokeStyle = 'white';
+    this.ctx.fillRect(x, y, barW * healthPercent, mainBarH);
+    this.ctx.strokeStyle = '#fff';
     this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(x, y, barW, barH);
+    this.ctx.strokeRect(x, y, barW, mainBarH);
+    
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = 'bold 12px "Courier New"';
+    this.ctx.textAlign = 'left';
+    this.ctx.fillText('HP', x + 5, y + 16);
+    this.ctx.textAlign = 'right';
+    this.ctx.fillText(`${Math.ceil(player.health)}/${player.maxHealth}`, x + barW - 5, y + 16);
 
-    // Stamina Bar
-    const staminaW = 120; // Smaller bar
-    const staminaY = y + barH + 5;
-    const staminaH = 8;
-    this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    this.ctx.fillRect(x, staminaY, staminaW, staminaH);
+    // 2. STAMINA (STAM)
+    const staminaY = y + mainBarH + 15;
+    this.ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    this.ctx.fillRect(x, staminaY, barW, subBarH);
     const staminaPercent = Math.max(0, player.stamina / player.maxStamina);
     this.ctx.fillStyle = player.isExhausted ? '#ef4444' : '#3b82f6';
-    this.ctx.fillRect(x, staminaY, staminaW * staminaPercent, staminaH);
-    this.ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    this.ctx.fillRect(x, staminaY, barW * staminaPercent, subBarH);
+    this.ctx.strokeStyle = 'rgba(255,255,255,0.4)';
     this.ctx.lineWidth = 1;
-    this.ctx.strokeRect(x, staminaY, staminaW, staminaH);
-    this.ctx.fillStyle = 'white';
-    this.ctx.font = 'bold 20px "Courier New"';
+    this.ctx.strokeRect(x, staminaY, barW, subBarH);
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = 'italic bold 9px "Courier New"';
     this.ctx.textAlign = 'left';
-    this.ctx.fillText(`PONTOS: ${state.score.toString().padStart(6, '0')}`, x, y + barH + 25);
-    this.ctx.font = 'bold 14px "Courier New"';
-    this.ctx.fillText(`NÍVEL: ${state.level}`, x, y + barH + 45);
-    this.ctx.fillText(`ABATES: ${state.kills}`, x, y + barH + 60);
+    this.ctx.fillText('STAMINA', x + 2, staminaY - 2);
 
-    // Inventory HUD
+    // 3. XP BAR (Integrated below Stamina)
+    const xpY = staminaY + subBarH + 12;
+    const killsToNextLevel = 10;
+    const progressPercent = (state.kills % killsToNextLevel) / killsToNextLevel;
+    this.ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    this.ctx.fillRect(x, xpY, barW, 4);
+    this.ctx.fillStyle = COLORS.ACCENT;
+    this.ctx.fillRect(x, xpY, barW * progressPercent, 4);
+    this.ctx.fillStyle = COLORS.ACCENT;
+    this.ctx.font = 'bold 9px "Courier New"';
+    this.ctx.textAlign = 'left';
+    this.ctx.fillText('PROGRESSO XP', x, xpY - 3);
+
+    // 4. STATS (Score, Level, Kills)
+    const statsY = xpY + 18;
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = 'bold 16px "Courier New"';
+    this.ctx.textAlign = 'left';
+    this.ctx.fillText(`SCORE: ${state.score.toString().padStart(6, '0')}`, x, statsY + 15);
+    
+    this.ctx.font = 'bold 13px "Courier New"';
+    this.ctx.fillStyle = COLORS.ACCENT;
+    this.ctx.fillText(`LVL: ${state.level}`, x, statsY + 35);
+    this.ctx.fillStyle = '#94a3b8';
+    this.ctx.fillText(`KILLS: ${state.kills}`, x + 80, statsY + 35);
+
+    // Inventory HUD (Right of Stats)
     if (player.inventory) {
-      this.ctx.fillStyle = player.inventory.rocks > 0 ? '#64748b' : 'rgba(255,255,255,0.2)';
-      this.ctx.fillText(`PEDRAS: ${player.inventory.rocks}`, x + 120, y + barH + 45);
-      
+      if (player.inventory.rocks > 0) {
+        this.ctx.fillStyle = '#64748b';
+        this.ctx.fillText(`● ROCHAS: ${player.inventory.rocks}`, x + 160, statsY + 15);
+      }
       if (player.inventory.ironBarHits > 0) {
         this.ctx.fillStyle = '#94a3b8';
-        this.ctx.fillText(`BARRA: ${player.inventory.ironBarHits} USOS`, x + 120, y + barH + 60);
+        this.ctx.fillText(`| BARRA: ${player.inventory.ironBarHits}`, x + 160, statsY + 35);
       }
     }
 
-    const killsToNextLevel = 10;
-    const progressPercent = (state.kills % killsToNextLevel) / killsToNextLevel;
-    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-    this.ctx.fillRect(x, y + barH + 70, 100, 4);
-    this.ctx.fillStyle = COLORS.ACCENT;
-    this.ctx.fillRect(x, y + barH + 70, 100 * progressPercent, 4);
-
+    // Combo UI (Remains unchanged in logic, just slightly adjusted position if needed)
     if (state.combo > 1) {
       this.ctx.save();
-      this.ctx.translate(CANVAS_WIDTH - 100, 80);
-      const scale = 1 + Math.sin(state.animationTime / 50) * 0.1;
+      this.ctx.translate(CANVAS_WIDTH - 60, 60);
+      const scale = 1 + Math.sin(state.animationTime / 100) * 0.1;
       this.ctx.scale(scale, scale);
       this.ctx.fillStyle = '#f59e0b';
-      this.ctx.font = 'bold 40px "Courier New"';
+      this.ctx.font = 'bold 36px "Courier New"';
       this.ctx.textAlign = 'center';
       this.ctx.fillText(`${state.combo}x`, 0, 0);
-      this.ctx.font = 'bold 16px "Courier New"';
-      this.ctx.fillText('COMBO', 0, 20);
-      const timerW = 80;
-      const timerPercent = state.comboTimer / COMBO_TIMEOUT;
-      this.ctx.fillStyle = 'white';
-      this.ctx.fillRect(-timerW/2, 30, timerW * timerPercent, 4);
+      this.ctx.font = 'bold 12px "Courier New"';
+      this.ctx.fillText('COMBO', 0, 15);
       this.ctx.restore();
     }
 
