@@ -149,22 +149,22 @@ export class Renderer {
 
     this.ctx.restore(); // Close camera translate
     
-    // Draw Game Over within the shake context if required
-    if (state.isGameOver) {
-      this.uiRenderer.drawGameOver(state.score, state.kills, state.level);
-    }
-
     this.ctx.restore(); // Close screen shake
 
     // 5. UI - Stable (Drawn after all restores)
-    this.uiRenderer.drawHUD(state);
+    if (!state.isGameOver) {
+      this.uiRenderer.drawHUD(state);
+      
+      if (state.isPaused) {
+        this.uiRenderer.drawPaused();
+      }
 
-    if (state.isPaused) {
-      this.uiRenderer.drawPaused();
-    }
-
-    if (state.levelUpTimer > 0) {
-      this.uiRenderer.drawLevelUp(state.level);
+      if (state.levelUpTimer > 0) {
+        this.uiRenderer.drawLevelUp(state.level);
+      }
+    } else {
+      // Draw Game Over as the absolute top layer
+      this.uiRenderer.drawGameOver(state.score, state.kills, state.level);
     }
   }
 }
