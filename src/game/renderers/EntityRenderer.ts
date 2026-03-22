@@ -310,12 +310,6 @@ export class EntityRenderer extends BaseRenderer {
       const breathing = Math.sin(time * 0.5) * 2;
       this.ctx.translate(dog.width / 2, 0);
       
-      // Shadow
-      this.ctx.fillStyle = 'rgba(0,0,0,0.15)';
-      this.ctx.beginPath();
-      this.ctx.ellipse(0, 0, 20 + breathing, 6, 0, 0, Math.PI * 2);
-      this.ctx.fill();
-
       this.ctx.fillStyle = dog.color;
       
       // Body (pulsing slightly with breathing)
@@ -344,13 +338,6 @@ export class EntityRenderer extends BaseRenderer {
       
       this.ctx.restore();
     } else {
-      // Shadow
-      this.ctx.fillStyle = 'rgba(0,0,0,0.2)';
-      this.ctx.beginPath();
-      const shadowExpand = isRunning ? Math.sin(time * 2) * 2 : 0;
-      this.ctx.ellipse(dog.width / 2, 0, 22 + shadowExpand, 6, 0, 0, Math.PI * 2);
-      this.ctx.fill();
-
       const runBounce = isRunning ? Math.abs(Math.sin(time * 2)) * -5 : 0;
       this.ctx.translate(0, runBounce);
 
@@ -472,12 +459,6 @@ export class EntityRenderer extends BaseRenderer {
 
     const w = taxi.width;
     const h = taxi.height;
-
-    // Shadow
-    this.ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    this.ctx.beginPath();
-    this.ctx.ellipse(w / 2, 0, w / 2 + 30, 15, 0, 0, Math.PI * 2);
-    this.ctx.fill();
 
     // Wheels
     const drawWheel = (wx: number) => {
@@ -605,12 +586,6 @@ export class EntityRenderer extends BaseRenderer {
     this.ctx.save();
     this.ctx.translate(item.position.x, item.position.z);
     
-    // Shadow
-    this.ctx.fillStyle = 'rgba(0,0,0,0.2)';
-    this.ctx.beginPath();
-    this.ctx.ellipse(15, 0, 15, 5, 0, 0, Math.PI * 2);
-    this.ctx.fill();
-
     const bounce = Math.sin(Date.now() / 200) * 5;
     this.ctx.translate(0, -15 + bounce);
 

@@ -43,13 +43,31 @@ export class Renderer {
     this.worldRenderer.drawGraffiti(cameraX);
     this.worldRenderer.drawStreet(cameraX);
     
-    // 2. Shadows (Drawn before all dynamic objects)
+    // 2. Shadows (Drawn before all dynamic objects to stay underneath)
+    // Enemies
     state.enemies.forEach(enemy => {
       if (enemy.state !== 'dead') {
         this.entityRenderer.drawShadow(enemy.position.x, enemy.position.z, enemy.width);
       }
     });
+
+    // Player
     this.entityRenderer.drawShadow(state.player.position.x, state.player.position.z, state.player.width);
+
+    // Dogs
+    state.dogs.forEach(dog => {
+      this.entityRenderer.drawShadow(dog.position.x, dog.position.z, dog.width);
+    });
+
+    // Taxis
+    state.taxis.forEach(taxi => {
+      this.entityRenderer.drawShadow(taxi.position.x - taxi.width / 2 - 20, taxi.position.z, taxi.width + 40);
+    });
+
+    // Items
+    state.items.forEach(item => {
+      this.entityRenderer.drawShadow(item.position.x - 10, item.position.z, 50);
+    });
 
     // 3. Dynamic Objects (Sorted by Z/yBase for depth)
     // This includes props, items, player, and enemies
