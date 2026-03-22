@@ -28,13 +28,14 @@ export class StreetRenderer extends BaseRenderer {
     streetCtx.fillStyle = COLORS.STREET;
     streetCtx.fillRect(0, 30, CANVAS_WIDTH, STREET_BOTTOM - (STREET_TOP + 30));
 
-    // Dividing Yellow Dashed Line
+    // Dividing Yellow Dashed Line (Center of Asphalt) - Made thicker and better centered
     streetCtx.strokeStyle = '#fde047';
-    streetCtx.lineWidth = 2;
-    streetCtx.setLineDash([30, 30]);
+    streetCtx.lineWidth = 6;
+    streetCtx.setLineDash([40, 40]);
     streetCtx.beginPath();
-    streetCtx.moveTo(0, (30 + (STREET_BOTTOM - STREET_TOP)) / 2 + 10 - 30);
-    streetCtx.lineTo(CANVAS_WIDTH, (30 + (STREET_BOTTOM - STREET_TOP)) / 2 + 10 - 30);
+    const asphaltCenterY = 30 + (STREET_BOTTOM - (STREET_TOP + 30)) / 2;
+    streetCtx.moveTo(0, asphaltCenterY);
+    streetCtx.lineTo(CANVAS_WIDTH, asphaltCenterY);
     streetCtx.stroke();
     streetCtx.setLineDash([]);
   }
