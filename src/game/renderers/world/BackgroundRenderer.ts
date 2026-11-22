@@ -128,9 +128,6 @@ export class BackgroundRenderer extends BaseRenderer {
   }
 
   drawWall(cameraX: number) {
-    this.ctx.fillStyle = COLORS.SKY;
-    this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
     if (this.cachedWall) {
       const repeatWidth = CANVAS_WIDTH * 2;
       const wallStart = Math.floor(cameraX / repeatWidth) * repeatWidth;

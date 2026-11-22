@@ -11,7 +11,8 @@ export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const rendererRef = useRef<Renderer | null>(null);
-  const [gameState, setGameState] = useState<any>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,12 +56,14 @@ export default function App() {
         return;
       }
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d', { alpha: false });
       if (!ctx) return;
 
       engineRef.current = new GameEngine();
       rendererRef.current = new Renderer(ctx);
 
+      let lastPaused = false;
+      let lastGameOver = false;
       let lastTime = performance.now();
       const loop = (currentTime: number) => {
         const dt = Math.min(currentTime - lastTime, 100);
@@ -80,7 +83,16 @@ export default function App() {
 
           engineRef.current.update(dt);
           rendererRef.current.render(engineRef.current.state);
-          setGameState({ ...engineRef.current.state });
+
+          const { isPaused: curPaused, isGameOver: curGameOver } = engineRef.current.state;
+          if (curPaused !== lastPaused) {
+            lastPaused = curPaused;
+            setIsPaused(curPaused);
+          }
+          if (curGameOver !== lastGameOver) {
+            lastGameOver = curGameOver;
+            setIsGameOver(curGameOver);
+          }
         }
         animationFrameId = requestAnimationFrame(loop);
       };
@@ -106,13 +118,17 @@ export default function App() {
   const handleRestart = () => {
     if (engineRef.current) {
       engineRef.current.state = engineRef.current.resetState();
+      setIsGameOver(false);
+      setIsPaused(false);
       audioManager.playSFX('kick');
     }
   };
 
   const handleTogglePause = () => {
     if (engineRef.current) {
-      engineRef.current.state.isPaused = !engineRef.current.state.isPaused;
+      const nextPaused = !engineRef.current.state.isPaused;
+      engineRef.current.state.isPaused = nextPaused;
+      setIsPaused(nextPaused);
     }
   };
 
@@ -190,7 +206,7 @@ export default function App() {
           >
             {/* HUD Overlay */}
             <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none z-10">
-              <div className="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10 invisible">
+              <div className="bg-black/60 px-4 py-2 rounded-xl border border-white/10 invisible">
                 {/* Spacer to maintain layout? or just use different structure */}
               </div>
               
@@ -198,19 +214,19 @@ export default function App() {
               <div className="absolute left-1/2 -translate-x-1/2 flex gap-2 pointer-events-auto">
                 <button 
                   onClick={handleTogglePause}
-                  className="bg-black/40 backdrop-blur-sm p-2 rounded-xl border border-white/10 active:bg-white/20 transition-colors"
+                  className="bg-black/60 p-2 rounded-xl border border-white/10 active:bg-white/20 transition-colors"
                 >
-                  {gameState?.isPaused ? <Play size={18} /> : <span className="text-lg leading-none">⏸️</span>}
+                  {isPaused ? <Play size={18} /> : <span className="text-lg leading-none">⏸️</span>}
                 </button>
                 <button 
                   onClick={handleToggleMute}
-                  className="bg-black/40 backdrop-blur-sm p-2 rounded-xl border border-white/10 active:bg-white/20 transition-colors"
+                  className="bg-black/60 p-2 rounded-xl border border-white/10 active:bg-white/20 transition-colors"
                 >
                   {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                 </button>
               </div>
 
-              <div className="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
+              <div className="bg-black/60 px-4 py-2 rounded-xl border border-white/10">
                 <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">NY, 1989</span>
               </div>
             </div>
@@ -247,7 +263,7 @@ export default function App() {
                 <div className="relative w-36 h-36 sm:w-44 sm:h-44 pointer-events-auto mb-4 mr-4">
                   {/* Attack (Top) - Larger */}
                   <button 
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-16 sm:w-20 sm:h-20 bg-red-600/20 backdrop-blur-md rounded-full flex items-center justify-center active:bg-red-600/40 active:scale-90 transition-all border border-red-500/30 shadow-[0_0_15px_rgba(220,38,38,0.2)] touch-none z-10"
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-16 sm:w-20 sm:h-20 bg-red-600/35 rounded-full flex items-center justify-center active:bg-red-600/60 active:scale-90 transition-transform border border-red-500/40 shadow-[0_0_15px_rgba(220,38,38,0.2)] touch-none z-10"
                     onTouchStart={(e) => { e.preventDefault(); engineRef.current?.inputManager.setKey('KeyF', true); }}
                     onTouchEnd={(e) => { e.preventDefault(); engineRef.current?.inputManager.setKey('KeyF', false); }}
                   >
@@ -256,7 +272,7 @@ export default function App() {
 
                   {/* Jump (Right) */}
                   <button 
-                    className="absolute top-1/2 right-0 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center active:bg-white/20 active:scale-90 transition-all border border-white/20 shadow-lg touch-none"
+                    className="absolute top-1/2 right-0 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-white/15 rounded-full flex items-center justify-center active:bg-white/30 active:scale-90 transition-transform border border-white/25 shadow-lg touch-none"
                     onTouchStart={(e) => { e.preventDefault(); engineRef.current?.inputManager.setKey('Space', true); }}
                     onTouchEnd={(e) => { e.preventDefault(); engineRef.current?.inputManager.setKey('Space', false); }}
                   >
@@ -265,7 +281,7 @@ export default function App() {
 
                   {/* Stone Attack (Left) */}
                   <button 
-                    className="absolute top-1/2 left-0 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center active:bg-white/20 active:scale-90 transition-all border border-white/20 shadow-lg touch-none"
+                    className="absolute top-1/2 left-0 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-white/15 rounded-full flex items-center justify-center active:bg-white/30 active:scale-90 transition-transform border border-white/25 shadow-lg touch-none"
                     onTouchStart={(e) => { e.preventDefault(); engineRef.current?.inputManager.setKey('KeyG', true); }}
                     onTouchEnd={(e) => { e.preventDefault(); engineRef.current?.inputManager.setKey('KeyG', false); }}
                   >
@@ -274,7 +290,7 @@ export default function App() {
 
                   {/* Run (Bottom) */}
                   <button 
-                    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center active:bg-white/20 active:scale-90 transition-all border border-white/20 shadow-lg touch-none"
+                    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-white/15 rounded-full flex items-center justify-center active:bg-white/30 active:scale-90 transition-transform border border-white/25 shadow-lg touch-none"
                     onTouchStart={(e) => { e.preventDefault(); engineRef.current?.inputManager.setKey('ShiftLeft', true); }}
                     onTouchEnd={(e) => { e.preventDefault(); engineRef.current?.inputManager.setKey('ShiftLeft', false); }}
                   >
@@ -282,9 +298,9 @@ export default function App() {
                   </button>
 
                   {/* Restart Button (Floating above/below if game over) */}
-                  {gameState?.isGameOver && (
+                  {isGameOver && (
                     <button 
-                      className="absolute -top-12 left-1/2 -translate-x-1/2 px-4 py-2 bg-red-500/20 backdrop-blur-md rounded-2xl flex items-center justify-center active:bg-red-500/40 active:scale-95 transition-all border border-red-500/30 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-red-400 touch-none flex gap-2 items-center whitespace-nowrap"
+                      className="absolute -top-12 left-1/2 -translate-x-1/2 px-4 py-2 bg-red-600/40 rounded-2xl flex items-center justify-center active:bg-red-600/60 active:scale-95 transition-transform border border-red-500/40 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-red-300 touch-none flex gap-2 items-center whitespace-nowrap"
                       onClick={handleRestart}
                     >
                       <RotateCcw size={12} />

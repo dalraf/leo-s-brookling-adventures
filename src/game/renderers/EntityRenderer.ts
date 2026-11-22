@@ -250,45 +250,47 @@ export class EntityRenderer extends BaseRenderer {
       this.ctx.fillRect(headX - 2, headY - 2, 6, 15);
     }
 
-    // Face details (Eyes and Mouth) - Profile View
-    // Eye (Profile view - only one eye visible on the front side)
-    const eyeY = headY + 6;
-    const eyeW = 6;
-    const eyeH = 5;
-    const eyeX = headX + headWidth - 10; // Positioned towards the front
+    // Face details (Eyes and Mouth) & Health bar - skip for shadow pass
+    if (!isShadow) {
+      // Eye (Profile view - only one eye visible on the front side)
+      const eyeY = headY + 6;
+      const eyeW = 6;
+      const eyeH = 5;
+      const eyeX = headX + headWidth - 10; // Positioned towards the front
 
-    // White of eye
-    this.ctx.fillStyle = 'white';
-    this.ctx.fillRect(eyeX, eyeY, eyeW, eyeH);
+      // White of eye
+      this.ctx.fillStyle = 'white';
+      this.ctx.fillRect(eyeX, eyeY, eyeW, eyeH);
 
-    // Pupil
-    this.ctx.fillStyle = 'black';
-    this.ctx.fillRect(eyeX + 3, eyeY + 1, 2, 3);
+      // Pupil
+      this.ctx.fillStyle = 'black';
+      this.ctx.fillRect(eyeX + 3, eyeY + 1, 2, 3);
 
-    // Eyelid (Angry slant)
-    this.ctx.strokeStyle = this.darkenColor(skinColor);
-    this.ctx.lineWidth = 2;
-    this.ctx.beginPath();
-    this.ctx.moveTo(eyeX - 1, eyeY - 1);
-    this.ctx.lineTo(eyeX + eyeW + 1, eyeY + 1);
-    this.ctx.stroke();
+      // Eyelid (Angry slant)
+      this.ctx.strokeStyle = this.darkenColor(skinColor);
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.moveTo(eyeX - 1, eyeY - 1);
+      this.ctx.lineTo(eyeX + eyeW + 1, eyeY + 1);
+      this.ctx.stroke();
 
-    // Angry Mouth (Profile view - on the front edge)
-    this.ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-    this.ctx.lineWidth = 2;
-    this.ctx.beginPath();
-    const mouthX = headX + headWidth - 8;
-    const mouthY = headY + 15;
-    this.ctx.moveTo(mouthX, mouthY);
-    this.ctx.lineTo(mouthX + 6, mouthY + 2); // Slightly down-turned angry mouth
-    this.ctx.stroke();
+      // Angry Mouth (Profile view - on the front edge)
+      this.ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      const mouthX = headX + headWidth - 8;
+      const mouthY = headY + 15;
+      this.ctx.moveTo(mouthX, mouthY);
+      this.ctx.lineTo(mouthX + 6, mouthY + 2); // Slightly down-turned angry mouth
+      this.ctx.stroke();
 
-    if (!isDead) {
-      const healthWidth = (entity.health / entity.maxHealth) * entity.width;
-      this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      this.ctx.fillRect(0, -entity.height - 25, entity.width, 5);
-      this.ctx.fillStyle = entity.health > 20 ? '#22c55e' : '#ef4444';
-      this.ctx.fillRect(0, -entity.height - 25, healthWidth, 5);
+      if (!isDead) {
+        const healthWidth = (entity.health / entity.maxHealth) * entity.width;
+        this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        this.ctx.fillRect(0, -entity.height - 25, entity.width, 5);
+        this.ctx.fillStyle = entity.health > 20 ? '#22c55e' : '#ef4444';
+        this.ctx.fillRect(0, -entity.height - 25, healthWidth, 5);
+      }
     }
     this.ctx.restore();
   }
@@ -572,14 +574,17 @@ export class EntityRenderer extends BaseRenderer {
     // Grill
     this.ctx.fillRect(w - 3, -80, 5, 25);
 
-    // Headlight (Brighter)
-    this.ctx.shadowBlur = 15;
-    this.ctx.shadowColor = '#fef08a';
-    this.ctx.fillStyle = '#fffabc';
-    this.ctx.beginPath();
-    this.ctx.arc(w - 5, -65, 12, 0, Math.PI * 2);
-    this.ctx.fill();
-    this.ctx.shadowBlur = 0;
+    // Headlight (Brighter - fast layered glow without expensive shadowBlur)
+    if (!isShadow) {
+      this.ctx.fillStyle = 'rgba(254, 240, 138, 0.28)';
+      this.ctx.beginPath();
+      this.ctx.arc(w - 5, -65, 22, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.fillStyle = '#fffabc';
+      this.ctx.beginPath();
+      this.ctx.arc(w - 5, -65, 12, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
 
     this.ctx.restore();
   }

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 
 interface VirtualJoystickProps {
   onMove: (direction: { x: number; y: number }) => void;
@@ -6,52 +6,56 @@ interface VirtualJoystickProps {
 }
 
 export const VirtualJoystick: React.FC<VirtualJoystickProps> = ({ onMove, onEnd }) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = useRef(false);
   const joystickRef = useRef<HTMLDivElement>(null);
+  const handleRef = useRef<HTMLDivElement>(null);
+  const centerRef = useRef({ x: 0, y: 0 });
   const baseSize = 80;
   const handleSize = 30;
   const maxDistance = baseSize / 2;
 
+  const updateHandleTransform = (x: number, y: number) => {
+    if (handleRef.current) {
+      handleRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    }
+  };
+
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    if (!joystickRef.current) return;
+    const rect = joystickRef.current.getBoundingClientRect();
+    centerRef.current = {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    };
+    isDraggingRef.current = true;
     handleTouchMove(e);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !joystickRef.current) return;
+    if (!isDraggingRef.current) return;
     e.preventDefault();
 
     const touch = e.touches[0];
-    const rect = joystickRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    let deltaX = touch.clientX - centerX;
-    let deltaY = touch.clientY - centerY;
+    let deltaX = touch.clientX - centerRef.current.x;
+    let deltaY = touch.clientY - centerRef.current.y;
 
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const angle = Math.atan2(deltaY, deltaX);
-
     if (distance > maxDistance) {
-      deltaX = Math.cos(angle) * maxDistance;
-      deltaY = Math.sin(angle) * maxDistance;
+      const scale = maxDistance / distance;
+      deltaX *= scale;
+      deltaY *= scale;
     }
 
-    setPosition({ x: deltaX, y: deltaY });
+    updateHandleTransform(deltaX, deltaY);
 
-    // Normalize direction
-    const normX = deltaX / maxDistance;
-    const normY = deltaY / maxDistance;
-
-    onMove({ x: normX, y: normY });
+    onMove({ x: deltaX / maxDistance, y: deltaY / maxDistance });
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
-    setIsDragging(false);
-    setPosition({ x: 0, y: 0 });
+    isDraggingRef.current = false;
+    updateHandleTransform(0, 0);
     onEnd();
   };
 
@@ -66,17 +70,18 @@ export const VirtualJoystick: React.FC<VirtualJoystickProps> = ({ onMove, onEnd 
     >
       {/* Base */}
       <div 
-        className="absolute inset-0 rounded-full bg-white/10 backdrop-blur-sm border border-white/20"
+        className="absolute inset-0 rounded-full bg-white/15 border border-white/25"
         style={{ width: baseSize, height: baseSize }}
       />
       {/* Handle */}
       <div 
-        className="absolute rounded-full bg-white/30 backdrop-blur-md border border-white/40 shadow-lg transition-transform duration-75"
+        ref={handleRef}
+        className="absolute rounded-full bg-white/40 border border-white/50 shadow-lg will-change-transform"
         style={{ 
           width: handleSize, 
           height: handleSize,
-          left: baseSize / 2 - handleSize / 2 + position.x,
-          top: baseSize / 2 - handleSize / 2 + position.y,
+          left: baseSize / 2 - handleSize / 2,
+          top: baseSize / 2 - handleSize / 2,
         }}
       />
     </div>

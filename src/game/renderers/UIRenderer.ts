@@ -150,12 +150,13 @@ export class UIRenderer extends BaseRenderer {
 
   drawLevelUp(level: number) {
     this.ctx.save();
-    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
     this.ctx.font = 'bold 60px "Courier New"';
     this.ctx.textAlign = 'center';
-    this.ctx.shadowColor = '#f59e0b';
-    this.ctx.shadowBlur = 20;
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    this.ctx.fillText(`NÍVEL ${level}`, CANVAS_WIDTH / 2 + 3, CANVAS_HEIGHT / 2 + 3);
+    this.ctx.fillStyle = '#f59e0b';
     this.ctx.fillText(`NÍVEL ${level}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     this.ctx.font = 'bold 20px "Courier New"';
     this.ctx.fillText('AS RUAS ESTÃO FICANDO DIFÍCEIS', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40);
     this.ctx.restore();
